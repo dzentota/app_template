@@ -1,15 +1,15 @@
-version: '2'
+version: '3'
 services:
   nginx:
     networks:
       - backend
     image: nginx:1.9.6
     volumes:
-      - ./src:/www
+      - ./src:/www:rw
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
       - ./docker/nginx/ssl:/etc/nginx/ssl
     ports:
-      - "8090:80"
+      - "80:80"
     depends_on:
       - php
   memcached:
