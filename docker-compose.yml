@@ -1,0 +1,63 @@
+version: '2'
+services:
+  nginx:
+    networks:
+      - backend
+    image: nginx:1.9.6
+    volumes:
+      - ./:/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+    ports:
+      - "8090:80"
+    depends_on:
+      - php
+  memcached:
+    image: memcached:alpine
+    networks:
+      - backend
+  redis:
+    image: redis:alpine
+    networks:
+      - backend
+  php:
+    networks:
+      - backend
+    build: ./docker/php/build
+    volumes:
+      - ./:/www:rw
+      - ./docker/php/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php/auth.json:/root/.composer/auth.json
+      - ./docker/php/cron:/etc/cron.d
+    working_dir: /www/
+    environment:
+      - ICU_DATA=/opt/icu/
+  db:
+    networks:
+      - backend
+    image: mysql:5.7
+    volumes:
+      - './docker/mysql/db:/var/lib/mysql'
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+  phpmyadmin:
+    restart: always
+    image: phpmyadmin/phpmyadmin
+    networks:
+      - backend
+    ports:
+      - '8080:80'
+    environment:
+      MYSQL_USERNAME: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+    depends_on:
+      - db
+networks:
+  backend: null
